@@ -1,0 +1,43 @@
+#!/usr/bin/env python3 
+#Shebang: spune sistemului de operare să folosească interpretorul python3 pentru a rula acest script
+#chmod +x github-activity 
+
+import sys
+import urllib.request
+import json
+
+if len(sys.argv) != 2:
+    print("Error: Invalid arguments!")
+    sys.exit(1)
+else:
+    username = sys.argv[1]
+    url = f"https://api.github.com/users/{username}/events"
+    try:
+        # urllib.request deschide o conexiune HTTP către API-ul GitHub
+        with urllib.request.urlopen(url) as response:
+            raw_data = response.read()
+            events = json.loads(raw_data.decode()) # # Citim datele brute (biți), le decodăm în text (UTF-8) și le convertim în structuri Python
+            supported_events = ['PushEvent', 'IssuesEvent', 'WatchEvent']
+            for event in events:
+                # .get() este mai sigur decât event['type'], deoarece nu crapă dacă cheia lipsește
+                event_type = event.get('type')
+                if event_type in supported_events:
+                    if event_type == 'PushEvent':
+                        payload = event.get('payload', {})
+                        commits = len(payload.get('commits', []))
+                        if commits > 0:
+                            print(f"Pushed {commits} commits to {event['repo']['name']}")
+                    elif event_type == 'IssuesEvent':
+                        action = event.get('payload', {}).get('action', 'interacted with')
+                        print(f"{action.capitalize()} an issues in {event['repo']['name']}") # action.capitalize() transforma prima litera in majuscula
+                    elif event_type == 'WatchEvent':
+                        print(f"Starred {event['repo']['name']}")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            print(f"Error: user '{username}' not found")
+        else:
+            print(f"Error: {e.code}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+
