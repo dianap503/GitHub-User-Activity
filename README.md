@@ -13,4 +13,4 @@ Un utilitar simplu pentru linia de comandă (CLI) care preia și afișează acti
    ```bash
    chmod +x github-activity\
 3. Introdu comanda:
-   './github-activity <username>'
+   `./github-activity <username>`
